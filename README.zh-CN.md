@@ -10,7 +10,8 @@ OpenWarp 是基于 [Warp](https://github.com/warpdotdev/warp) 开源代码的社
 
 [English](./README.md) · [文档](https://docs.warp.dev) · [上游 Warp](https://www.warp.dev)
 
-> ⚠️ 当前项目处于早期开发,尚未发布正式版本。与 Warp 官方公司**无任何附属关系**。
+> ⚠️ 当前项目处于早期开发,社区 release 从 `oss` channel 发布。
+> 与 Warp 官方公司**无任何附属关系**。
 
 </div>
 
@@ -34,8 +35,8 @@ OpenWarp 把这层完全打开:
 ## 🚀 三步,把 AI 完全握在自己手里
 
 **01 · 接入任意提供商**
-设置中粘贴 Base URL 与 API Key —— 任何 OpenAI Chat Completions 兼容端点都即插即用,
-凭证仅保存在本地。
+打开 **Settings → AI → Providers**,新增一个 provider,填入 API 类型、Base URL、
+API Key 和模型 ID。凭证仅保存在本地。
 
 **02 · 编写动态提示词**
 基于 minijinja 模板引擎,根据当前工作目录、语言、角色实时渲染系统提示词。
@@ -47,12 +48,12 @@ OpenWarp 把这层完全打开:
 
 | 提供商 | Base URL | 备注 |
 | --- | --- | --- |
-| **OpenAI** | `https://api.openai.com/v1` | 官方协议 |
-| **Anthropic** | 通过 genai 原生协议 | Claude 4.x 全系列 |
-| **DeepSeek** | `https://api.deepseek.com/v1` | thinking + tool calling |
-| **Gemini** | 通过 genai 原生协议 | Google AI Studio |
-| **Ollama** | `http://localhost:11434/v1` | 本地推理,无需 Key |
-| **OpenRouter** | `https://openrouter.ai/api/v1` | 聚合网关 |
+| **OpenAI** | `https://api.openai.com/v1/` | API 类型选 `OpenAI` 或 `OpenAI-Response` |
+| **Anthropic** | `https://api.anthropic.com/v1/` | API 类型选 `Anthropic` |
+| **DeepSeek** | `https://api.deepseek.com/v1/` | reasoning 模型建议选 `DeepSeek` |
+| **Gemini** | `https://generativelanguage.googleapis.com/v1beta/` | API 类型选 `Gemini` |
+| **Ollama** | `http://localhost:11434/v1/` | 本地推理 |
+| **OpenRouter** | `https://openrouter.ai/api/v1/` | 聚合网关 |
 | **Qwen / Groq / Together / LM Studio / 任意 OpenAI 兼容代理** | — | 配置即用 |
 
 ## 🔧 核心特性
@@ -66,11 +67,54 @@ OpenWarp 把这层完全打开:
 - **保留 Warp 体验** — 持续合并上游,Blocks / Workflows / AI 命令 / Keymaps / 主题完整保留
 - **多语言界面** — 简体中文 + English,后续社区可扩展
 
+## 📦 Release 版本与 channel
+
+本 fork 的 GitHub Releases 都从 **`oss` channel** 构建。Release 资产就是普通用户应安装的桌面二进制:
+
+| 分支 / tag 类型 | 二进制 / channel | 用途 |
+| --- | --- | --- |
+| `dev` 上的 `v*.oss_00` release tag | `warp-oss` / `oss` | 社区 DMG、Windows 安装包、Linux AppImage / deb |
+| `main` 源码构建 | `warp-oss` / `oss` | 不依赖 Warp 私有 channel config 的本地开发 |
+| `warp`、`dev`、`preview`、`stable` 二进制 | Warp 内部 channel | 不面向 OpenWarp 用户;它们依赖 Warp 私有 `warp-channel-config` |
+
+Release 二进制设置 AI provider 时**不需要** `.env` 文件。当前 fork 也还没有独立 autoupdate
+通道,社区 DMG / Windows 产物可能是未签名版本。
+
+## 🔑 AI Provider 设置
+
+在 **Settings → AI → Providers** 中配置 provider。一个 provider 只有同时具备以下信息,
+才会出现在模型选择器里:
+
+| 字段 | 填什么 |
+| --- | --- |
+| API 类型 | OpenAI Chat Completions 兼容服务选 `OpenAI`;Responses API 兼容服务选 `OpenAI-Response`;原生协议选 `Anthropic`、`Gemini`、`Ollama`、`DeepSeek` |
+| Base URL | 带上 API 版本路径,例如 `https://api.openai.com/v1/` |
+| API Key | provider 的密钥;会写入系统安全存储,不会写进 `settings.toml`。对不校验鉴权的本地端点,也填一个 `local` 之类的本地占位值,这样 provider 才会被视为配置完整 |
+| Models | 填上游 API 请求里真实使用的 model ID |
+| Extra headers | 可选,给网关或代理服务加额外路由头 |
+
+常见示例:
+
+| Provider | API 类型 | Base URL | Model ID |
+| --- | --- | --- | --- |
+| OpenAI Chat Completions | `OpenAI` | `https://api.openai.com/v1/` | `<model-id>` |
+| OpenAI Responses | `OpenAI-Response` | `https://api.openai.com/v1/` | `<model-id>` |
+| OpenRouter | `OpenAI` | `https://openrouter.ai/api/v1/` | `<provider>/<model-id>` |
+| DeepSeek chat | `OpenAI` | `https://api.deepseek.com/v1/` | `deepseek-chat` |
+| DeepSeek reasoning | `DeepSeek` | `https://api.deepseek.com/v1/` | `deepseek-reasoner` |
+| Anthropic | `Anthropic` | `https://api.anthropic.com/v1/` | `<model-id>` |
+| Gemini | `Gemini` | `https://generativelanguage.googleapis.com/v1beta/` | `<model-id>` |
+| Ollama | `Ollama` | `http://localhost:11434/v1/` | `<local-model-id>` |
+
+新增的 [`.env.example`](.env.example) 只用于本地开发、release 自动化,以及把 provider
+参数复制进 UI 时作参考。桌面 app 不会自动把 `OPENAI_API_KEY`、`ANTHROPIC_API_KEY`
+这类环境变量导入为 AI 凭证。
+
 ## 📦 本地构建
 
 ```bash
-git clone https://github.com/zerx-lab/openwarp
-cd openwarp
+git clone https://github.com/Gy-Hu/warp
+cd warp
 ./script/bootstrap   # 平台依赖
 ./script/run         # 构建并运行
 ./script/presubmit   # fmt / clippy / tests
@@ -100,11 +144,11 @@ cargo run   --release --bin warp-oss
 
 ## 🌿 分支与上游同步
 
-`zerx-lab/warp` 维护两条长期分支:
+`Gy-Hu/warp` 维护两条长期分支:
 
 | 分支 | 跟踪 | 用途 |
 | --- | --- | --- |
-| `main` | `zerx-lab/warp:main`(默认分支) | OpenWarp 主开发线,**所有 PR 都提到这条分支**。 |
+| `main` | `Gy-Hu/warp:main`(默认分支) | OpenWarp 主开发线,**所有 PR 都提到这条分支**。 |
 | `warp-upstream` | `warpdotdev/warp:master` | 上游 Warp 的纯净镜像,用于拉取上游更新,**不在此分支做 fork 自有改动**。 |
 
 **贡献者须知**
@@ -133,7 +177,7 @@ git cherry-pick <sha>             # 或在需要整体同步时 merge warp-upstr
 
 欢迎社区贡献。完整流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-提交 Issue 前,请先 [搜索现有 Issues](https://github.com/zerx-lab/warp/issues)。
+提交 Issue 前,请先 [搜索现有 Issues](https://github.com/Gy-Hu/warp/issues)。
 安全漏洞请按 [CONTRIBUTING.md#reporting-security-issues](CONTRIBUTING.md#reporting-security-issues) 私下上报。
 
 ## 🙏 致谢

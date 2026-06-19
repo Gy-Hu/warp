@@ -11,7 +11,8 @@ and keeping every credential local.
 
 [简体中文](./README.zh-CN.md) · [Docs](https://docs.warp.dev) · [Upstream Warp](https://www.warp.dev)
 
-> ⚠️ Early development. No official release yet. **Not affiliated with Warp, Inc.**
+> ⚠️ Early development. Community release builds are published from the `oss` channel.
+> **Not affiliated with Warp, Inc.**
 
 </div>
 
@@ -35,8 +36,8 @@ OpenWarp opens that layer entirely:
 ## 🚀 Three steps to take AI fully into your own hands
 
 **01 · Plug in any provider**
-Paste a Base URL and API key in settings — any OpenAI Chat Completions–compatible
-endpoint works out of the box. Credentials are stored locally only.
+Open **Settings → AI → Providers**, add a provider, and paste its API type,
+Base URL, API key, and model IDs. Credentials are stored locally only.
 
 **02 · Author dynamic prompts**
 A minijinja-powered template engine renders the system prompt in real time
@@ -50,12 +51,12 @@ the experience is identical to Warp, but every layer is yours.
 
 | Provider | Base URL | Notes |
 | --- | --- | --- |
-| **OpenAI** | `https://api.openai.com/v1` | Native protocol |
-| **Anthropic** | via genai native | Claude 4.x family |
-| **DeepSeek** | `https://api.deepseek.com/v1` | thinking + tool calling |
-| **Gemini** | via genai native | Google AI Studio |
-| **Ollama** | `http://localhost:11434/v1` | Local inference, no key |
-| **OpenRouter** | `https://openrouter.ai/api/v1` | Aggregator gateway |
+| **OpenAI** | `https://api.openai.com/v1/` | Use API type `OpenAI` or `OpenAI-Response` |
+| **Anthropic** | `https://api.anthropic.com/v1/` | Use API type `Anthropic` |
+| **DeepSeek** | `https://api.deepseek.com/v1/` | Use API type `DeepSeek` for reasoning models |
+| **Gemini** | `https://generativelanguage.googleapis.com/v1beta/` | Use API type `Gemini` |
+| **Ollama** | `http://localhost:11434/v1/` | Local inference |
+| **OpenRouter** | `https://openrouter.ai/api/v1/` | Aggregator gateway |
 | **Qwen / Groq / Together / LM Studio / any OpenAI-compatible proxy** | — | Configure and go |
 
 ## 🔧 Core features
@@ -69,11 +70,57 @@ the experience is identical to Warp, but every layer is yours.
 - **Warp experience preserved** — continuously merged with upstream; Blocks, Workflows, AI commands, Keymaps and themes all kept
 - **Localized UI** — Simplified Chinese + English, community-extensible
 
+## 📦 Release builds and channels
+
+GitHub Releases in this fork are built from the **`oss` channel**. The release
+assets are the desktop binaries users should install:
+
+| Branch / tag family | Binary / channel | Use |
+| --- | --- | --- |
+| `dev` release tags like `v*.oss_00` | `warp-oss` / `oss` | Community DMG, Windows installer, Linux AppImage / deb |
+| `main` source builds | `warp-oss` / `oss` | Normal local development without Warp private channel config |
+| `warp`, `dev`, `preview`, `stable` binaries | Internal Warp channels | Not for OpenWarp users; they require Warp's private `warp-channel-config` |
+
+Release binaries do **not** require a `.env` file for AI provider setup. They
+also currently have no fork-local autoupdate path, and community DMG / Windows
+artifacts may be unsigned.
+
+## 🔑 AI provider setup
+
+Configure providers in **Settings → AI → Providers**. A provider becomes
+selectable only after all of these are present:
+
+| Field | What to enter |
+| --- | --- |
+| API type | `OpenAI` for Chat Completions-compatible services, `OpenAI-Response` for Responses API-compatible services, or the native type `Anthropic`, `Gemini`, `Ollama`, `DeepSeek` |
+| Base URL | Include the API version path, for example `https://api.openai.com/v1/` |
+| API key | The provider key; it is saved in the OS secure storage, not in `settings.toml`. For local endpoints that do not enforce auth, enter a local placeholder such as `local` so the provider is considered complete |
+| Models | Add the exact upstream model ID that should be sent in requests |
+| Extra headers | Optional gateway headers, for example routing headers used by proxy services |
+
+Common examples:
+
+| Provider | API type | Base URL | Model ID |
+| --- | --- | --- | --- |
+| OpenAI Chat Completions | `OpenAI` | `https://api.openai.com/v1/` | `<model-id>` |
+| OpenAI Responses | `OpenAI-Response` | `https://api.openai.com/v1/` | `<model-id>` |
+| OpenRouter | `OpenAI` | `https://openrouter.ai/api/v1/` | `<provider>/<model-id>` |
+| DeepSeek chat | `OpenAI` | `https://api.deepseek.com/v1/` | `deepseek-chat` |
+| DeepSeek reasoning | `DeepSeek` | `https://api.deepseek.com/v1/` | `deepseek-reasoner` |
+| Anthropic | `Anthropic` | `https://api.anthropic.com/v1/` | `<model-id>` |
+| Gemini | `Gemini` | `https://generativelanguage.googleapis.com/v1beta/` | `<model-id>` |
+| Ollama | `Ollama` | `http://localhost:11434/v1/` | `<local-model-id>` |
+
+The optional [`.env.example`](.env.example) file is for local development,
+release automation, and copying provider values into the UI. The desktop app
+does not auto-import `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or similar provider
+variables as AI credentials.
+
 ## 📦 Build from source
 
 ```bash
-git clone https://github.com/zerx-lab/openwarp
-cd openwarp
+git clone https://github.com/Gy-Hu/warp
+cd warp
 ./script/bootstrap   # platform-specific deps
 ./script/run         # build & run
 ./script/presubmit   # fmt / clippy / tests
@@ -104,11 +151,11 @@ Same as upstream Warp:
 
 ## 🌿 Branches & upstream sync
 
-`zerx-lab/warp` keeps two long-lived branches:
+`Gy-Hu/warp` keeps two long-lived branches:
 
 | Branch | Tracks | Purpose |
 | --- | --- | --- |
-| `main` | `zerx-lab/warp:main` (default) | OpenWarp's main development line. **All PRs target this.** |
+| `main` | `Gy-Hu/warp:main` (default) | OpenWarp's main development line. **All PRs target this.** |
 | `warp-upstream` | `warpdotdev/warp:master` | Pristine mirror of upstream Warp, used to pull in new commits. **No fork-local changes.** |
 
 **For contributors**
@@ -137,7 +184,7 @@ git cherry-pick <sha>             # or merge warp-upstream when a full sync make
 
 Community contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full flow.
 
-Before filing, please [search existing issues](https://github.com/zerx-lab/warp/issues).
+Before filing, please [search existing issues](https://github.com/Gy-Hu/warp/issues).
 Security vulnerabilities should be reported privately per
 [CONTRIBUTING.md#reporting-security-issues](CONTRIBUTING.md#reporting-security-issues).
 

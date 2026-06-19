@@ -1478,8 +1478,7 @@ impl AgentDriver {
                 ))
             })
             .await
-            .map_err(|_| AgentDriverError::InvalidRuntimeState)
-            .flatten()?;
+            .map_err(|_| AgentDriverError::InvalidRuntimeState)??;
 
         let (prompt_text, system_prompt, resumption_prompt): (
             Cow<'_, str>,
